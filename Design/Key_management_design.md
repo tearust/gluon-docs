@@ -2,6 +2,7 @@
 
 ![](./1.svg)
 
+
 Let's assume Alice is our client. She is going to create a BTC wallet that managed by Gluon.
 In order to get disaster recovery, she assign her three friends Bob, Charlie and Dave to be her recovery accounts.
 
@@ -9,13 +10,54 @@ Alice needs to have a TEA Layer1 plugin (Polkadot extension) on her browser. She
 
 Gluon will create a 2/3 Multisig BTC account. The 3 keypairs are called P1, P2 and P3.
 
-P1 is sent to Alice's mobile phone immediately. Gluno won't have any copy of P1 secret key
+P1 secrete key is stored in Alice' phone app. The app can sign a tx using P1 sec key once fingerprint verification passed. Gluon won't have any copy of P1 secret key and have no access to P1. But Bluon can verify P1 signature from Alice' phone before allow P2 to sign.
 
-P2 is managed by Gluon under Alice's control.
+P2 is managed by Gluon under Alice's browser extension control. Alice's browser extension can sign a "Sign Request" to Gluon layer1. Note: This Sign Request is not a signed tx. Alice's browser does NOT have P2. Alice' browser has a keypair (Gluon account login) to access Gluon layer1.  This is different than P2. the logic behind when to use P2 to sign tx is explained later.
 
-P3 is managed by Cluon under Friend Recovery Smart Contract Control (FRSC). 
+P3 is managed by Cluon under Friend Recovery Smart Contract Control (FRSC). This is a simple threshold account verification. As long as 2/3 preset friends signed a "Recovery Request", the P3 is allowed to use to sign such a "Recovery Request". Note: P3 can only be used to sign "Recovery Request", not "Sign Request".
 
-Because this BTC account is 2/3 Multisig. Any 2 of P1 P2 P3 can pass authentication.
+Because this BTC account is 2/3 Multisig. Any 2 of P1 P2 P3 can pass BTC's verification. The combinations are
+- P1 + P2: For sign request. It is commonly used for any tx to transfer fund from Alice's BTC account
+- P1 + P3: For recovery request. It is used when Alice lost or leak her browser extension account login secret. Use this combination to transfer all Alice's assets to her new created Gluon account. After a successful recovery, Alice' old gluon account will be disabled forever.
+- P2 + P3: For recovery request. It is used when Alice lost or leak her phone Gluon App secret. Use this combination to transfer all Alice's assets to her new created Gluon account. After a successful recovery, Alice' old phone gluon app will be disabled forever.
+
+## Relationship and mapping
+
+![](5.svg)
+
+Every user has two factors to authenticate. One is Browser extension, another is mobile app. The browser extension does't have to be an extension. It could be any kind of popluar software or hardware wallets that support Polkadot account system. We use extension for easy explaining. Please do not get limited by the name yet.
+
+The Gluon mobile app is a Gluon build application, it has more security features than a regular software mobile wallet. So it cannot be replaced with other Polkadot compatible wallet.
+
+The browser extension's public key is the user's TEA layer1 account ID. TEA Layer1 (it is also Gluon layer1) verify the signature of extension sec key to authenticate the request from browser. 
+
+Because the browser extension lack of 2FA as mobile apps do, we use the Gluon mobile app as an important additional authentication factor to any request from browser. That means any request from browser cannot be authenticated only by veriifying signature of layer1 sec key( browser extension sec key). It has to get mobile app's signature to continue.
+
+Because the extension pub key is the same as TEA layer 1, you cannot change browser pub/sec key. If you lost or leak the sec key, you may need to create a new TEA layer1 account then use Recovery Request to transfer all your assets to the new account while disable old account.
+
+However, the mobile app pub key is just a mapping to TEA Layer1 account, so you can update the mobile app's pub key. It comes handy is you frequently upgrade your phone. We designed a Transfer Between Phone workflow for this. It is easy and secure.
+
+The TEA layer1 ID is the single ID to Gluon Wallet. You can have as many as you want crypto accounts inside the single wallet. So this is a 1-to-many mapping. All accounts are an "asset" in layer1. When transfer those assets from one Layer1 account to another layer1 account is easy without transferring the money inside those account. It is as easy as remapping. Of course, the remapping is under control of the smart contract so protect stealth. 
+
+Every asset need to be a 2/3 multisig account. It contains 3 private keys, we call them P1, P2, P3. 
+
+Every private key of P1/P2/P3 is not stored anywhere in the world. They are splitted into Shamir Secret Sharring pieces. Those pieces are repinned by many replica pinners. 
+
+See the diagram below, the Gluon Asset is a Private Key like P1 for example. 
+
+
+![](replica_repin.svg)
+
+Any Gluon Asset (for example a 2/3 MultiSig BTC account) has 3 keys, P1, P2 and P3. P1 is managed by client's mobile app. Gluon services won't access to P1 at all. 
+P2 and P3 are managed by Gluon services. In this digram we use P2 as an example. P3 is exactly the same as P2.
+
+P2 is splitted to 3 pieces using Shamir Secret Sharing Schema. Those 3 pieces are SSSKey1, SSSKey 2, SSSKey3. We use the number 3 for example. it could be any number. Use need to speicify this number as N. Another number is K, which means how many pieces are required to rebuild the orignal P2. In our exmaple, we use K= 2, N = 3. So this is a 2/3 Shamir Secure Sharring. In the real world, we should use much larger number for security reasons.
+
+Each SSSKey are repinned by other pinners, those are called replica. They are exactly the same. We are repinned just for redundant reason. We do not want to lose all of them at any moment. In our diagram we draw 3 replicas for example. It could be a very large number.
+
+When reconstructing P2, we use the typical TEA discovery algorithm to find any replica from each SSSKey tree. As long as we get 2 SSSKeys, we can reconstruct the P2.
+
+As long as we have two of three (P1, P2, P3), we can multi sign the BTC transaction. 
 ## Alice register Gluon wallet account
 
 ```puml
@@ -209,4 +251,3 @@ This is a very rare case and if this happened in other blockchain projects, this
 ![](4.svg)
 
 # Replica and Shamir Secret Sharing
-![](replica_repin.svg)
