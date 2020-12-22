@@ -184,9 +184,11 @@ NewAliceGluonApp -> Alice: Show the QR code of nonce
 Alice -> OldAliceGluonApp: Scan the QR code on New Phone screen, the nonce enter old phone.
 OldAliceGluonApp -> OldAliceGluonApp: Show the notice, let Alice fingerprint confirmation. 
 OldAliceGluonApp -> GluonLayer2: Send hashed nonce, waiting for confirmation
-GluonLayer2 -> OldAliceGluonApp: Confirm the hash matches
-OldAliceGluonApp -> Alice: Show P1's QR code and mnemonic phrases
-Alice -> NewAliceGluonApp: Using new phone to scan old phone's QR code.
+GluonLayer2 -> GluonLayer2: Verify hash of nonce. If match, Generate a temp AES key.
+GluonLayer2 -> OldAliceGluonApp: Confirm the hash matches. Including the AES key
+GluonLayer2 -> NewAliceGluonApp: Confirm pairing OK. Notification including the AES key.
+OldAliceGluonApp -> Alice: Show P1's QR code. The QR code is AES encrypted private key
+Alice -> NewAliceGluonApp: Using new phone to scan old phone's QR code. Decrypt the private key using AES key from GluonLayer2.
 NewAliceGluonApp -> NewAliceGluonApp: Store the P1 into secured place. 
 NewAliceGluonApp -> GluonLayer2: Send notification of successful transfer.
 GluonLayer2 -> TeaLayer1: Replace OldAliceGluonApp's AppPubKey with NewAliceGluonApp's AppPubKey. From now on, only new app can communite with Gluon
