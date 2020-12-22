@@ -58,7 +58,12 @@ Each SSSKey are repinned by other pinners, those are called replica. They are ex
 When reconstructing P2, we use the typical TEA discovery algorithm to find any replica from each SSSKey tree. As long as we get 2 SSSKeys, we can reconstruct the P2.
 
 As long as we have two of three (P1, P2, P3), we can multi sign the BTC transaction. 
+
+# Workflows
+
 ## Alice register Gluon wallet account
+
+Question: Should we use RSA key in mobile app? I think we should use ECC instead. 
 
 ```puml
 @startuml
@@ -76,26 +81,33 @@ Alice -> AliceGluonApp: Download APP and install on her phone.
 AliceGluonApp -> AliceGluonApp: Generate RSA keypair. Pub key as AppPubKey. App store AppSecKey in a secrete place
 
 Alice -> AliceBrowser: Download and install Polkadot Extension. Create a new account of TEA Layer1.
+
 AliceBrowser -> AliceBrowser: Start pairing mode. Generate a random nonce at Browser (or extension) in QR code format. 
 note right
 The QR code include
 - Nonce
 - Alice browser's public key. Also called Alice's layer1 account ID, or just accountID.
+- Signature on Nonce using Alice accountID
 end note
-AliceBrowser -> TeaLayer1: Send the hashed nonce to layer1. 
-TeaLayer1 -> TeaLayer1: Stored the hashed nonce in Alice account info map. 
 
-AliceBrowser -> AliceGluonApp: Alice use AliceGluonApp's camera to scan such a QR code got the nonce and AliceBrowser's public key (this is Alice layer1 account ID)
+AliceBrowser -> TeaLayer1: Send the hashed nonce to layer1. 
+
+TeaLayer1 -> TeaLayer1: Stored the hashed nonce in Alice account info map. This hashed nonce is for temporary use to verify mobile phone app. So it may timeout and removed. 
+
+AliceBrowser -> AliceGluonApp: Alice use AliceGluonApp's camera to scan such a QR code got the nonce and AliceBrowser's public key (this is Alice layer1 account ID). Verify sig
 
 AliceGluonApp -> TeaLayer1: Send registration application 
 note right
 including: 
 - nonce, 
 - AppPubKey, 
-- Alice Browser public key (this is also Alice's accountID)
+- Alice Browser public key received from QR code(this is also Alice's accountID)
+- Signature of nonce using AppSecKey
 end note
 
-TeaLayer1 -> TeaLayer1: Hash the nonce, then compare with stored hashed nonce in Alice' account info map.
+AliceGluonApp -> AliceGluonApp: Store the browser extension public key (TEA Layer1 account id). this account ID would be used for all verification in the future
+
+TeaLayer1 -> TeaLayer1: Verify sig, Hash the nonce, then compare with stored hashed nonce in Alice' account info map previous stored from Browser request.
 note right
 If hash does't match. Drop this request. Someone is trying to imperson Alice's phone.
 If match, store AppPubKey to Alice's account info map. Use this pubkey for future communication mobile app verification
@@ -105,15 +117,18 @@ end note
 AliceBrowser -> TeaLayer1 : Query updated account information. 
 note right
 We should see a mobile app has been paired with Alice's account. The AppPubKey is shown.
-
+If possible, browser can also listen to the layer1 event so that it know when the pairing process completed.
 end note
+AliceGluonApp -> TeaLayer1: Query updated account information. Confirm successfully paired.
 @enduml
 ```
 
 Only one mobile app can be paired with Alice's account at any time. If Alice want to update her phone, she need to run the Transfer task to assign new phone and disable old phone.
 
-Once Alice' mobile app is paired with Alice' account. Only Alice's mobile app can send message to both Gluon layer1 and layer2. Everytime Gluon will use a nonce to verify AppPubKey signature to prevent man in the middle attack.
+Once Alice' mobile app is paired with Alice' account. Only Alice's mobile app can send message to both Gluon layer1 and layer2. Everytime Gluon will use a nonce to verify AppPubKey signature to prevent man in the middle attack. This is common practice, so we will not mention in our workflow.
+
 ## Generate BTC 2/3 MultiSig Account
+
 ```puml
 @startuml
 autonumber
@@ -127,15 +142,46 @@ actor TeaLayer1
 actor GluonLayer2
 endbox
 === Alice submit Generate BTC Account task request ===
-Alice -> AliceBrowser: Run Generate BTC Account webapp in AliceBrowser
+
+Alice -> AliceBrowser: Go to Gluon client app webpage. Run Generate BTC Account task in AliceBrowser. This task is "GenerateBTCRequest"
+Alice -> AliceBrowser: Enter task detail
+note right
+Include:
+- What cryptocurrency account you are going to generate? BTC, ETH or ...?
+- Shamir k/n K=? N=?
+- Recovery friend public key list
+- The threshold of friend recovery. how many freinds signature can covery your assets?
+- Allow Friend Recovery? by default yes
+- Allow mobile phone app transfer? by default yes
+- Signature of task using Layer1 account ID (extension pub key)
+Automatic calculate the gas limit based on the information above.
+end note
+
 AliceBrowser -> AliceBrowser: Create a QR code with information: task_name: GenerateBTC, nonce: 1234(random number)
-AliceBrowser -> TeaLayer1: Hashed nonce.
-TeaLayer1 -> TeaLayer1: Record hashed nonce for one-time-verification use. Temporary
+
+AliceBrowser -> TeaLayer1: Hashed nonce, Hash of the task detail, signature of this task.
+note right
+Here we do not send the full detail of the task, just the hash of the task detail.
+the purpose is to verify the task detail from the mobile app. Since the mobile app will send the detail anyway.
+We trust mobile phone more than web because the mobile app has fingerprint sensor.
+When mobile app send task to the layer1. Layer1 will hash the task detail and compare with the hashOfTask from browser.
+end note
+
+TeaLayer1 -> TeaLayer1: Verify sig. Store hashed nonce for one-time-verification use. Temporary. Hash of the task detail. Temporary.
+
 AliceGluonApp <- AliceBrowser: Alice use mobile app to scan the QR code. Use fingerprint to confirm.
-AliceBrowser -> TeaLayer1: Send confirmation including: nonce, signed nonce using AppSecKey, task_name
-TeaLayer1 -> TeaLayer1: Verify 1. AppPubKey verify signature 2. Hash the nonce compare with Browser uploaded hashed nonce.
+note right
+This is the best time for Alice to review the task detail. Make sure that all the information are correct before fingerprint confirmation. 
+end note
+
+AliceBrowser -> TeaLayer1: Send confirmation including: nonce, signed nonce using AppSecKey, task full detail.
+
+TeaLayer1 -> TeaLayer1: Verify 1. AppPubKey verify signature 2. Hash the nonce compare with Browser uploaded hashed nonce. Hash of task detail matches browser update too.
+
 TeaLayer1 -> TeaLayer1: Generate a Generate BTC task on behalf of Alice
+
 == Generate BTC Account ==
+
 
 
 @enduml
@@ -251,3 +297,5 @@ This is a very rare case and if this happened in other blockchain projects, this
 ![](4.svg)
 
 # Replica and Shamir Secret Sharing
+
+ 
