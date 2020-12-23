@@ -1,4 +1,4 @@
-# Overall
+# Basic concepts
 
 ![](./1.svg)
 
@@ -190,9 +190,14 @@ TeaLayer1 -> TeaLayer1: Generate a Generate BTC task on behalf of Alice
 
 In common usage, only P1 and P2 are used to sign a transaction.
 
-Typically Alice can start a transaction from a web browser. Once a transaction is created (for example, sending $100 to Eve).  
+Typically Alice can start a transaction from a web browser.  
 
-Alice use her browser's Polakdot Extension to sign a signature request (SigReq) of this transaction. Note: This is a Signature Request sending to Gluon, not a signature of this transaction. Gluon receives this SigReq, save it in Task Pool but not continue until P1 (Mobile app) to sign first. After few seconds, her mobile Gluon app receive a push notification. Alice use her fingerprint (or Face recognization depends on her phone settings) to unlock the Gluon app. Gluon app will show the detail of transaction, in our case "Sending $100 to Eve). Alice re-confirm the transaction then click sign. Alice's mobile phone has P1 secret so that the app can sign this transaction. P1 is completed. This P1 signature also send to Gluon. Gluon received P1 Signature and verify. If this signature from a registered phone all and verify successfully, Gluon will conintue to get P2 signature using Sharmir Secret Sharing Schema. Once P2 is signed, both signature send to BTC.
+Alice use her browser's Polakdot Extension to sign a signature request (SigReq) of this transaction. Note: This is a Signature Request sending to Gluon, not a signature of this transaction. The signature request doesn't contain full transaction but a hash of the transaction. The full transaction will be sent from Alice mobile phone Gluon app. Gluon receives this SigReq, save the hash of task detail it in Task Pool but not continue until P1 (Mobile app) to sign the transaction first. 
+
+Once the transaction reuqest is sent to layer1, the web browser shows a QR code. Alice need to use her phone Gluon app to scan this QR code.
+
+Gluon app will show the detail of transaction, in our case "Sending $100 to Eve). Alice re-confirm the transaction then click sign. Alice's mobile phone has P1 secret so that the app can sign this transaction. P1 is completed. This P1 signature also send to Gluon. Gluon received P1 Signature and verify. If this signature from a registered phone all and verify successfully, Gluon will conintue to get P2 signature using Sharmir Secret Sharing Schema. Once P2 is signed, both signature send to BTC.
+b
 
 ![](./2.svg )
 
@@ -213,9 +218,16 @@ actor BTC
 
 Alice -> AliceBrowser: Create a tx
 AliceBrowser -> TeaLayer1: Request Gluon to sign using P2
+AliceBrowser -> AliceBrowser: Show QR code on screen waiting for Alice GluonApp to scan
+note right
+QR code include information
+- task detail
+- nonce
+- signature
+end note
+
 TeaLayer1 -> TeaLayer1: Verify AliceBrowser P2; Create SigReq task
 TeaLayer1->GluonLayer2: Find Executor to process SigReq task
-GluonLayer2->AliceGluonApp: Push notification. Wake up with a session_id. At meantime start FindProvs to save time
 AliceGluonApp -> GluonLayer2: Query session_id
 GluonLayer2 -> GluonLayer2: Verify AliceGluonApp; 
 GluonLayer2 -> AliceGluonApp: SigReq from AliceBrowser
@@ -265,8 +277,7 @@ including:
 end note
 
 TeaLayer1 -> GluonLayer2: Execute transfer task
-GluonLayer2 -> OldAliceGluonApp: Push notification
-OldAliceGluonApp -> GluonLayer2: Query
+OldAliceGluonApp -> GluonLayer2: Alice start old app and old app contact to backend Query
 GluonLayer2 -> OldAliceGluonApp: Notify Alice that you have a new phone asking to transfer p1 from the current phone
 NewAliceGluonApp -> Alice: Show the QR code of nonce
 Alice -> OldAliceGluonApp: Scan the QR code on New Phone screen, the nonce enter old phone.
