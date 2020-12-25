@@ -231,7 +231,8 @@ TeaLayer1->GluonLayer2: Find Delegator to process SigReq task
 AliceGluonApp -> AliceGluonApp: Scan QR code to show tx detail on mobile screen. Request Alice to confirm using fingerprint
 Alice -> AliceGluonApp: Confirm by unlock fingerprint
 AliceGluonApp -> TeaLayer1: Signature of Tx using P1
-GluonLayer2 -> TeaLayer1: Verify Signature from AliceGluonApp. If pass, emit event and start P2 signature process (SSS) in GluonLayer2
+TeaLayer1 -> TeaLayer1: Verify Signature from AliceGluonApp
+TeaLayer1 -> GluonLayer2: If pass, emit event and start P2 signature process (SSS) 
 GluonLayer2 -> BTC: Send 2 signature satisfied 2/3 MultiSig
 @enduml
 ```
