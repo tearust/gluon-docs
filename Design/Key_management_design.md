@@ -227,12 +227,11 @@ QR code include information
 end note
 
 TeaLayer1 -> TeaLayer1: Verify AliceBrowser P2; Create SigReq task
-TeaLayer1->GluonLayer2: Find Delegator to process SigReq task
 AliceGluonApp -> AliceGluonApp: Scan QR code to show tx detail on mobile screen. Request Alice to confirm using fingerprint
 Alice -> AliceGluonApp: Confirm by unlock fingerprint
 AliceGluonApp -> TeaLayer1: Signature of Tx using P1
 TeaLayer1 -> TeaLayer1: Verify Signature from AliceGluonApp
-TeaLayer1 -> GluonLayer2: If pass, emit event and start P2 signature process (SSS) 
+TeaLayer1 -> GluonLayer2: If pass find Delegator to process SigReq task, emit event and start P2 signature process (SSS) 
 GluonLayer2 -> BTC: Send 2 signature satisfied 2/3 MultiSig
 @enduml
 ```
