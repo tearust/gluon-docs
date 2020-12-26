@@ -10,7 +10,7 @@ Layer1: store the hashed nonce in account info map
 // called by browser
 pub fn send_nonce {
   origin,
-  hashed_nonce Cid,
+  nonce_hash: Cid,
 }
 ```
 
@@ -22,9 +22,9 @@ App: send registration application to layer1
 // called by app
 pub fn send_registration_application {
   origin,
-  nonce Cid,
-  app_pk AccountId,
-  nonce_signature Cid,
+  nonce: Cid,
+  nonce_signature: [u8; 64],
+  browser_account: AccountId
 }
 ```
 
@@ -33,7 +33,7 @@ pub fn send_registration_application {
 Layer1: verify the signature and compare the nonce hash of app and  browser. if passed, an event will be fired.
 
 ```rust
-registrationApplicationSucceed(BrowserPublicKey, AppPublicKey)
+RegistrationApplicationSucceed(BrowserPublicKey, AppPublicKey)
 ```
 
 
@@ -58,54 +58,57 @@ Layer1: verify signature, compare the nonce hash of browser and app,  compare th
 // called by browser
 pub fn browser_generate_account {
 	origin,
-  hashed_nonce Cid,
-  task_hash Cid,
+  nonce_hash: Cid,
+  task_hash: Cid,
 }
 
 // called by app
 pub fn generate_account_without_p3 {
 	origin,
-	nonce Cid,
-	nonce_signature Cid,
+	nonce: Cid,
+	nonce_signature: Cid,
 	delegator_tea_id: TeaPubKey,
-  key_type: Cid,
-  p1 Cid,
+    key_type: Cid,
+    p1: Cid,
 	p2_n: u32,
 	p2_k: u32,
+  browser_pk: ClientPubKey,
 }
 
 // called by app
 pub fn generate_account {
 	origin,
-	nonce Cid,
-	nonce_signature Cid,
+	nonce: Cid,
+	nonce_signature: Cid,
 	delegator_tea_id: TeaPubKey,
-  key_type: Cid,
-  p1 Cid,
+    key_type: Cid,
+    p1: Cid,
 	p2_n: u32,
 	p2_k: u32,
-  friends_secret Cid, //secret of your friends
-  p3_k: u32,
+    friends_secret: Cid, //secret of your friends
+    p3_k: u32,
 }
 
 ```
 
 ```rust
 // called by facade
-pub fn update_generate_key_without_p3_result(
+pub fn update_generate_account_without_p3_result(
 	origin,
 	task_id: Cid,
-  p2_deployment_ids: Vec<Cid>,
+    p2: Cid,
+    p2_deployment_ids: Vec<Cid>,
+    multiSigAccount: Cid,
 )
 
 // called by facade
-pub fn update_generate_key_result(
+pub fn update_generate_account_result(
 	origin,
 	task_id: Cid,
-  p2: Cid,
-  p2_deployment_ids: Vec<Cid>,
-  p3: Cid, // if len == 0 means 2/2 multi signature
-  p3_deployment_ids: Vec<Cid>,
+    p2: Cid,
+    p2_deployment_ids: Vec<Cid>,
+    p3: Cid, // if len == 0 means 2/2 multi signature
+    p3_deployment_ids: Vec<Cid>,
 )
 ```
 
@@ -113,31 +116,31 @@ pub fn update_generate_key_result(
 
 ```json
 {
-  "KeyGenerationData": {
+  "AccountGenerationData": {
           "fields": {
-            "keyType": {
-              "rule": "required",
-              "type": "string",
-              "id": 1
-            },
             "n": {
               "rule": "required",
               "type": "int32",
-              "id": 2
+              "id": 1
             },
             "k": {
               "rule": "required",
               "type": "int32",
-              "id": 3
+              "id": 2
             },
             "delegatorTeaId": {
               "rule": "required",
               "type": "bytes",
+              "id": 3
+            },
+            "keyType": {
+              "rule": "required",
+              "type": "string",
               "id": 4
-            }
+            },
           }
         },
- "GenerateKeyResponse": {
+ "GenerateAccountResponse": {
           "fields": {
             "taskId": {
               "rule": "required",
@@ -158,10 +161,15 @@ pub fn update_generate_key_result(
               "rule": "required",
               "type": "string",
               "id": 4
+            },
+            "p1PublicKey":{
+              "rule": "required",
+              "type": "string",
+              "id": 5
             }
           }
         },
- "GenerateKeyWithoutP3Response": {
+ "GenerateAccountWithoutP3Response": {
           "fields": {
             "taskId": {
               "rule": "required",
@@ -177,6 +185,11 @@ pub fn update_generate_key_result(
               "rule": "required",
               "type": "string",
               "id": 3
+            },
+            "p1PublicKey":{
+              "rule": "required",
+              "type": "string",
+              "id": 4
             }
           }
         }
@@ -186,8 +199,8 @@ pub fn update_generate_key_result(
 **③layer1 event** 
 
 ```rust
-KeyGenerationRequested(Task_hash, KeyGenerationData)
-UpdateGenerateKey(Task_hash, KeyGenerationResult)
+AccountGenrationRequested(Task_hash, KeyGenerationData)
+UpdateAccountGeneration(Task_hash, KeyGenerationResult)
 ```
 
 
@@ -234,8 +247,7 @@ pub fn update_p1_signature {
 pub fn update_sign_tx_result(
 	origin,
 	task_id: Cid,
-  P2: Cid,
-  P2_signature: TxData,
+  succeed: bool,
 )
 ```
 
@@ -250,25 +262,30 @@ pub fn update_sign_tx_result(
               "type": "string",
               "id": 1
             },
-            "keyTaskId": {
+            "dataAdhoc": {
               "rule": "required",
-              "type": "string",
+              "type": "bytes",
               "id": 2
             },
-            "dataAdhoc": {
+            "multiSigAccount": {
               "rule": "required",
               "type": "bytes",
               "id": 3
             },
-            "delegatorTeaId": {
-              "rule": "required",
-              "type": "bytes",
-              "id": 4
-            },
             "payment": {
               "rule": "required",
               "type": "string",
+              "id": 4
+            }
+            "delegatorTeaId": {
+              "rule": "required",
+              "type": "bytes",
               "id": 5
+            },
+  					"p1Signature": {
+              "rule": "required",
+              "type": "bytes",
+              "id": 6
             }
           }
   },
