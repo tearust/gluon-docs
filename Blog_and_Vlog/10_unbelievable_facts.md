@@ -1,14 +1,16 @@
 # 10 Unbelievable Facts of Gluon - a Decentralized Crypto Wallet
-
+![](unbelievable.png)
 ## Your private keys are not stored anywhere.
 
 In the Blockchain world, your private key is everything. If you lose it, you lose everything forever. But if I tell you that even if Gluon doesn’t store your private key and you don’t have a copy of your private key nor mnemonic phrases, you can still have control over all your digital assets, would you believe it?
 
 Nothing is impossible. If you continue reading, I’ll tell you how.
 
-Your private key is split into N smaller pieces using a cryptographic algorithm called Shamir Secret Sharing Schema (SSSS for short). None of these pieces have full information about your original private key. They are stored and distributed all over the TEA network by many TEA Nodes. Anyone outside of the hardware protected enclosure has zero knowledge about which pieces belong to which private key. The mapping information and pieces of SSSS are encrypted and stored in the TEA node’s hardware protected secure RAM, never stored to any persistent storage, even when encrypted.
+Your private key is split into N smaller pieces with K as the threshold using a cryptographic algorithm called Shamir Secret Sharing Schema (SSSS for short). No one can rebuild the original private key unless he collects K of N SSSS pieces. All those SSSS pieces are stored and distributed all over the TEA network by many TEA Nodes. Our TEA Consensus prevents any TEA node to host more than 1 (or another user defined number far less than K) SSSS pieces. Anyone outside of the hardware protected enclosure has zero knowledge about which pieces belong to which private key and which TEA node hosts which SSSS piece. The mapping information and SSSS pieces are encrypted and stored in the TEA node’s hardware protected secure RAM, never stored to any persistent storage (eg. hard disk or SSD), even after encryption.  
 
-When you want to sign a blockchain transaction using this private key, it is required to pass 2 levels of authentication (not your grandpa’s 2FA). When Gluon layer 1 (a Substrate based blockchain) verifies your access, TEA Nodes will run a consensus to get K pieces of SSSS to one randomly selected TEA Node (This node is called Executor). Inside this Executor, your original private key is reconstructed and used to sign your transaction. After that, the transaction is sent to your blockchain while the private key is wiped from the RAM as if nothing happened.
+When you want to sign a blockchain transaction using this private key, it is required to pass 2 levels of authentication (not your grandpa’s 2FA). One of the two factors is a regular web extension used by Polkadot blockchain. Another factor is mobile phone authentication, which protected by either face-lock or fingerprint lock.
+
+When Gluon layer 1 (a Substrate based blockchain) verifies your access, TEA Nodes will run a consensus to get K (K is the threshold number) pieces of SSSS to one randomly selected TEA Node (This node is called Executor). Inside this Executor, your original private key is reconstructed and used to sign your transaction. After that, the transaction is sent to your blockchain while the private key is wiped from the RAM as if nothing happened.
 
 TEA Remote Attestation Consensus randomly selects Verifier TEA nodes to monitor the whole process and ensure the good behavior of all involved nodes. Suppose these verifiers cannot get a consensus on the security of the whole workflow. Not only will the signature not be sent, but all of the digital assets protected by this private key will also be transferred to other secure locations.
 
@@ -18,19 +20,21 @@ Because we are decentralized, it is common to say that we don’t have your priv
 
 Your next question is probably: What if something happens which causes the private key to get lost?
 
+![](../Design/1.svg)
 ## Replicas everywhere and nowhere.
 
 Like IPFS’s “pin” concept, TEA uses “repin” to let TEA Nodes host the SSSS pieces' unlimited replicas. Over time, any SSSS piece of your private key can have hundreds or thousands of replicas all over the TEA network. It is almost impossible to have all of them dead at the same time. And you do not need all N pieces available to rebuild your private key. K pieces are enough. You can define the K and N when you generate your private key. The K and N are basic parameters of the Shamir Secure Sharing Schema. Assume you set N = 10, K = 3, TEA will only need any 3 of the 10 pieces to rebuild your private key.
 
 Since the replicas of the SSSS pieces are zero-knowledge to the outside world, no one will ever know which node stores which pieces of which private keys, so it is “nowhere.”
 
-## Your assets are protected by 3 master keys owned by you, Gluon, and your friends.
+![](../Design/replica_repin.svg)
+## Your assets are protected by 3 master keys hosted by you, Gluon, and your friends.
 
 Your assets are protected by 2/3 multisig by default. You own one key (P1) and Gluon uses SSSS to protect the second key (P2).
 
 Two of these three private keys can move your assets. In most cases, we use P1 and P2. P3 is only used for disaster recoveries which I will explain later.
 
-Gluon will not access P1 because it is generated and stored in your Gluon mobile app which will never expose private keys to anyone. When I say “anyone” I mean everyone, including you and Gluon. Yes, you read that right! You don’t have the private key nor the mnemonic phrases. Now, you may be asking: wait, what if I upgrade my phone? If I don’t have the mnemonic phrase, how can I restore my private key to my new phone?
+Gluon will not access P1 because it is generated and stored in your Gluon mobile app which will never expose private keys to anyone. When I say “anyone” I mean everyone, including you and Gluon. Yes, you read that right! You don’t have the private key nor the mnemonic phrases of P1. Now, you may be asking: wait, what if I upgrade my phone? If I don’t have the mnemonic phrase, how can I restore my private key to my new phone?
 
 ## Got a new phone? Restore your private key even without the mnemonic phrase!
 
@@ -59,7 +63,7 @@ Remember the P3 owned by your friends? This is the time for you to get your frie
 When you create your Gluon asset, you can select some of your friends to be your recovery contacts. You don’t have to tell them you chose them, but make sure you know them and can contact them in case of a disaster. You will need to create a new account on your new computer and phone and submit a “Recovery Request.” This is almost the same process as transfering to a new phone, the only difference is that you have to find some (the number is K) of your friends to scan the QR code on your new phone. As I mentioned in the K and N story, you don’t have to have all of your friends to scan, only K friends will do. But of course, you will need to be with them in person to run this recovery process and prevent any scams. GPS plays an important role here!
 
 ## Phishing your friends won’t work.
-
+![](phishing.jpg)
 Phishing is the oldest and easiest low-tech scam, although it is still popular today. If a scammer knows who your recovery friends are, he could impersonate you to get your friends to sign the recovery request. To prevent this, we carefully designed our system.
 
 We use zero-knowledge almost everywhere in our TEA project. To any outsiders, there is no way to know who all your recovery friends are. And even if they do, running a brutal hack of all the combinations won’t work. The signing sequence matters and only you know the sequences! We also have GPS to enforce a face-to-face scan, not to mention,k commonly used nonce and cryptographic algorithms are all built-in.
@@ -73,6 +77,7 @@ In the beginning, TEA has fewer TEA Nodes running resulting in less security, bu
 ## Gluon is not a hardware wallet, it is many hardware wallets that can serve as a crypto wallet like Trust-as-a-Service
 
 Hardware wallets are still the best way to protect your crypto assets (although Ledger recently got a data breach in the clients database). A TEA node can run other TEA Projects’ applications for different purposes. Technically when it runs the Gluon webassembly code, it becomes a hardware wallet. Furthermore, it does not work alone. There are hundreds if not thousands of other TEA nodes that work together to keep the TEA network safe and secure. The larger-scale TEA is, the safer it is.
+![](../res/blog/0_q-o2ME7lRtdgCqkC.png)
 
 ## Gluon is not only a crypto wallet, it is also a portal of dApps and more.
 
