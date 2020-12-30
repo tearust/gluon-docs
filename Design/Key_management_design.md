@@ -231,15 +231,8 @@ AliceGluonApp -> AliceGluonApp: Scan QR code to show tx detail on mobile screen.
 Alice -> AliceGluonApp: Confirm by unlock fingerprint
 AliceGluonApp -> TeaLayer1: Signature of Tx using P1
 TeaLayer1 -> TeaLayer1: Verify Signature from AliceGluonApp
-TeaLayer1 -> GluonLayer2: If pass, emit an event to request delegator.
-GluonLayer2 -> TeaLayer1: Some delegator apply to be an delegator of this task  
-
-TeaLayer1 -> TeaLayer1: Random to select one delegator, and create nonce and encrypt it using the selected delegator pubKey. 
-TeaLayer1 -> GluonLayer2: emit event with encrypted nonce and start P2 signature process (SSS) 
-GluonLayer2 -> GluonLayer2: delgator try to decrypt the nonce, and deal with the task.
+TeaLayer1 -> GluonLayer2: If pass find Delegator to process SigReq task, emit event and start P2 signature process (SSS) 
 GluonLayer2 -> BTC: Send 2 signature satisfied 2/3 MultiSig
-GluonLayer2 -> TeaLayer1: Update the task result to finished with nonce
-TeaLayer1 -> TeaLayer1: Hash the nonce from delegator and compare it with original nonce hash. If pass record the result.
 @enduml
 ```
 
