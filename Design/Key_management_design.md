@@ -231,31 +231,8 @@ AliceGluonApp -> AliceGluonApp: Scan QR code to show tx detail on mobile screen.
 Alice -> AliceGluonApp: Confirm by unlock fingerprint
 AliceGluonApp -> TeaLayer1: Signature of Tx using P1
 TeaLayer1 -> TeaLayer1: Verify Signature from AliceGluonApp
-TeaLayer1 -> GluonLayer2: If pass, emit an event to request delegator.
-GluonLayer2 -> TeaLayer1: Some delegator apply to be an delegator of this task  
-note right
-the task comes with a CapChecker. All wannabe-delegator can check if it is capable to apply first.
-eg. a BTC generation task requires a BTC related crypto algo providers to be loaded
-for those who doesn't have such a provider, won't apply
-end note
-
-TeaLayer1 -> TeaLayer1: Random to select one delegator, and create nonce and encrypt it using the selected delegator pubKey. 
-TeaLayer1 -> GluonLayer2: emit event with encrypted nonce and start P2 signature process (SSS) 
-note right
-the hash of this nonce is stored in the block with the task
-so that other pinners (who hosts SSSS pieces) can verify if this executor is actually the winner.
-Only give the SSSS pieces to the real winner. 
-Anyone who is trying to impersonate the winner will get punished
-end note
-
-GluonLayer2 -> GluonLayer2: delgator try to decrypt the nonce, and deal with the task.
-note right
-Every wannabe delegator can try to decrypt, but only those selected can, others will fail.
-In this case, other wannabe knows it is not selected, but still has zero knowledge on who is selected, only the winner knows
-end note
+TeaLayer1 -> GluonLayer2: If pass find Delegator to process SigReq task, emit event and start P2 signature process (SSS) 
 GluonLayer2 -> BTC: Send 2 signature satisfied 2/3 MultiSig
-GluonLayer2 -> TeaLayer1: Update the task result to finished with nonce
-TeaLayer1 -> TeaLayer1: Hash the nonce from delegator and compare it with original nonce hash. If pass record the result.
 @enduml
 ```
 
