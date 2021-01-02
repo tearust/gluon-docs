@@ -1,1 +1,0 @@
-![](/img/Trust-construction.png)
