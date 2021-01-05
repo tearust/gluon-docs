@@ -6,7 +6,7 @@ sort:
       - name: Gluon_yet_another_crypto_wallet.md
       - name: Can_trusted_computing_protect_your_digital_assets.md
 
-  - name: What is Gluon 
+  - name: What_is_gluon_wallet
     path: What_is_gluon_wallet/README.md
     children:
       - name: relationship_with_tea.md
