@@ -1,10 +1,15 @@
 sort:
+
   - name: Blog_and_Vlog
     path: Blog_and_Vlog/README.md
     children:
       - name: Gluon_yet_another_crypto_wallet.md
       - name: Can_trusted_computing_protect_your_digital_assets.md
 
+  - name: What is Gluon 
+    path: What_is_gluon_wallet/README.md
+    children:
+      - name: relationship_with_tea.md
   
 
 
